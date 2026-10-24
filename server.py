@@ -1,211 +1,181 @@
-"""
-server.py - Emergency Notification Network, UDP server
 
-Run on Mininet host h1 (10.0.0.1):
-    python3 server.py
-
-Console commands:
-    alert <text>   send an alert to all registered clients; retransmit until ACKed
-    bg start       start background "BG|" traffic to clients
-    bg stop        stop background traffic
-    quit           shut down
-"""
-
-import argparse
 import socket
 import threading
 import time
-
-SERVER_PORT = 5000   # clients REGISTER and ACK on this port
-ACK_TIMEOUT = 3      # seconds to wait for ACKs before retransmitting
-MAX_RETRIES = 3      # retransmissions after the first send
-
-lock = threading.Lock()
-subscribers = set()        # (ip, port) of registered clients
-pending_acks = {}          # seq -> set of client addresses that still owe an ACK
-next_sequence = 1
 background_stop = threading.Event()
 background_thread = None
 
+ACK_TIMEOUT = 3
+MAX_RETRIES = 3
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Emergency alert server")
-    parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="IP to bind. 0.0.0.0 listens on all interfaces (needed in Mininet).",
-    )
-    parser.add_argument("--port", type=int, default=SERVER_PORT)
-    return parser.parse_args()
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server.bind(("127.0.0.1", 5000))
+
+subscribers = set()
+lock = threading.Lock()
+next_sequence = 1
+pending_acks = {}
+
+print("Emergency server started!")
 
 
-def receive_messages(server):
+def receive_messages():
     while True:
         try:
             data, address = server.recvfrom(1024)
+            message = data.decode().strip()
+
         except ConnectionResetError:
             continue
-        except OSError:
-            break  # socket was closed during shutdown
 
-        try:
-            message = data.decode().strip()
-        except UnicodeDecodeError:
-            continue
+        except OSError:
+            break
 
         if message == "REGISTER":
             with lock:
                 subscribers.add(address)
                 total = len(subscribers)
-            print(f"\nClient registered: {address} (total clients: {total})")
+
+            print(f"\nClient registered: {address}")
+            print(f"Total clients: {total}")
 
         elif message.startswith("ACK|"):
             parts = message.split("|", 2)
-            if len(parts) != 3:
-                continue
-            try:
-                sequence = int(parts[1])
-            except ValueError:
-                continue
-            client_id = parts[2]
+            if len(parts) == 3:
+                try:
+                    sequence = int(parts[1])
+                except ValueError:
+                    continue
 
-            with lock:
-                waiting = pending_acks.get(sequence)
-                accepted = waiting is not None and address in waiting
-                if accepted:
-                    waiting.discard(address)
+                client_id = parts[2]
 
-            if accepted:
-                print(f"\nACK received for alert {sequence} from {client_id}")
-            # Otherwise it is a duplicate or unexpected ACK; ignore it.
-
+                if sequence in pending_acks:
+                    with lock:
+                        if address in pending_acks[sequence]:
+                            pending_acks[sequence].remove(address)
+                            print(
+                                f"ACK received for alert {sequence} "
+                                f"from {client_id}"
+                            
+                            )
+                        else:
+                            print("ACK already received or client not waiting.")
         else:
-            print(f"\nMessage received from {address}: {message}")
+            print(f"\nMessage received: {message}")
 
 
-def send_alert(server, payload):
+
+def send_alert(payload):
     global next_sequence
 
     with lock:
-        if not subscribers:
-            print("No clients registered!")
-            return
+        clients = set(subscribers)
         sequence = next_sequence
         next_sequence += 1
-        pending_acks[sequence] = set(subscribers)
 
-    # The timestamp is taken once, so latency is measured from the first send.
-    message = f"ALERT|{sequence}|{time.time():.6f}|{payload}".encode()
-    failed = set()
+    if not clients:
+        print("No clients registered!")
+        return
 
-    try:
-        for attempt in range(MAX_RETRIES + 1):
-            with lock:
-                waiting = set(pending_acks.get(sequence, set()))
+    with lock:
+        pending_acks[sequence] = set(clients)
 
-            if not waiting:
-                print(f"Alert {sequence}: all clients ACKed.")
-                break
+    timestamp = time.time()
+    message = f"ALERT|{sequence}|{timestamp}|{payload}".encode()
 
-            for client in waiting:
-                server.sendto(message, client)
-
-            print(
-                f"Alert {sequence}: attempt {attempt + 1}, "
-                f"sent to {len(waiting)} waiting client(s)."
-            )
-
-            # Wait for ACKs, or until the timeout expires.
-            deadline = time.time() + ACK_TIMEOUT
-            while time.time() < deadline:
-                with lock:
-                    if not pending_acks.get(sequence):
-                        break
-                time.sleep(0.05)
-    finally:
+    for attempt in range(MAX_RETRIES + 1):
         with lock:
-            failed = pending_acks.pop(sequence, set())
+            waiting = set(pending_acks.get(sequence, set()))
+
+        if not waiting:
+            print(f"Alert {sequence}: all clients ACKed!")
+            break
+
+        for client in waiting:
+            server.sendto(message, client)
+
+        print(
+            f"Alert {sequence}: attempt {attempt + 1}, "
+            f"sent to {len(waiting)} waiting client(s)."
+        )
+
+        # Wait for ACKs, or until the timeout expires.
+        deadline = time.time() + ACK_TIMEOUT
+
+        while time.time() < deadline:
+            with lock:
+                if not pending_acks.get(sequence):
+                    break
+
+            time.sleep(0.1)
+
+    with lock:
+        failed = set(pending_acks.pop(sequence, set()))
 
     if failed:
-        print(f"Alert {sequence}: delivery NOT confirmed for {sorted(failed)}")
+        print(f"Delivery not confirmed for: {failed}")
+    
 
 
-def background_sender(server):
+def background_sender():
     counter = 0
+
     while not background_stop.is_set():
         with lock:
             clients = set(subscribers)
 
         for client in clients:
             try:
-                server.sendto(f"BG|Normal traffic {counter}".encode(), client)
+                server.sendto(
+                    f"BG|Normal traffic {counter}".encode(),
+                    client
+                )
             except OSError:
-                pass
+                return
 
         counter += 1
         background_stop.wait(0.5)
 
 
-def command_loop(server):
-    global background_thread
+threading.Thread(
+    target=receive_messages,
+    daemon=True
+).start()
 
-    while True:
-        try:
-            command = input("> ").strip()
-        except EOFError:
-            # No console attached (e.g. started with '&' in Mininet).
-            # Keep serving until Ctrl+C.
-            print("No console input available. Serving until Ctrl+C.")
-            while True:
-                time.sleep(1)
+while True:
+    command = input("> ").strip()
 
-        if command.startswith("alert "):
-            payload = command[len("alert "):].strip()
-            if payload:
-                send_alert(server, payload)
-            else:
-                print("Please enter alert text.")
+    if command.startswith("alert "):
+        payload = command[len("alert "):].strip()
 
-        elif command == "bg start":
-            if background_thread and background_thread.is_alive():
-                print("Background traffic is already running.")
-            else:
-                background_stop.clear()
-                background_thread = threading.Thread(
-                    target=background_sender, args=(server,), daemon=True
-                )
-                background_thread.start()
-                print("Background traffic started.")
+        if payload:
+            send_alert(payload)
+        else:
+            print("Please enter alert text.")
 
-        elif command == "bg stop":
-            background_stop.set()
-            print("Background traffic stopped.")
+        
+    elif command == "bg start":
+        if background_thread and background_thread.is_alive():
+            print("Background traffic is already running.")
+        else:
+            background_stop.clear()
+            background_thread = threading.Thread(
+                target=background_sender,
+                daemon=True
+            )
+            background_thread.start()
+            print("Background traffic started.")
 
-        elif command == "quit":
-            break
-
-        elif command:
-            print("Unknown command. Use: alert <text> | bg start | bg stop | quit")
-
-
-def main():
-    args = parse_args()
-
-    server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    server.bind((args.host, args.port))
-
-    threading.Thread(target=receive_messages, args=(server,), daemon=True).start()
-    print(f"Emergency server started! Listening on {args.host}:{args.port}")
-
-    try:
-        command_loop(server)
-    except KeyboardInterrupt:
-        print()
-    finally:
+    elif command == "bg stop":
         background_stop.set()
-        server.close()
-        print("Server stopped.")
+        print("Background traffic stopped.")
 
 
-if __name__ == "__main__":
-    main()
+    elif command == "quit":
+        break
+
+    else:
+        print("Unknown command.")
+
+server.close()
+
