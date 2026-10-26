@@ -1,0 +1,12 @@
+[c2] Listening on port 5001. Logging to logs/client_c2.csv
+[c2] Registered with 10.0.0.1:5000
+[c2] ALERT 1: warm-up (latency 0.62 ms)
+[c2] Registered with 10.0.0.1:5000
+[c2] ALERT 2: test 1 (latency 523.10 ms)
+[c2] ALERT 3: test 2 (latency 511.67 ms)
+[c2] ALERT 4: test 3 (latency 500.21 ms)
+[c2] ALERT 5: test 4 (latency 488.45 ms)
+[c2] ALERT 6: test 5 (latency 476.29 ms)
+[c2] ALERT 7: test 6 (latency 464.66 ms)
+[c2] ALERT 8: test 7 (latency 452.76 ms)
+[c2] ALERT 9: test 8 (latency 440.98 ms)

@@ -1,0 +1,21 @@
+loading app /home/rahul/Emergency_notification_network/emergency_controller.py
+loading app ryu.controller.ofp_handler
+instantiating app /home/rahul/Emergency_notification_network/emergency_controller.py of EmergencyController
+Emergency prioritisation: ON, OVS queue: ON
+instantiating app ryu.controller.ofp_handler of OFPHandler
+Switch s1 connected
+Switch s2 connected
+Port status s1 port 1: MODIFY, link UP -> flushing flows
+Port status s1 port 1: DELETE, link UP -> flushing flows
+Port status s2 port 2: MODIFY, link UP -> flushing flows
+Port status s2 port 2: DELETE, link UP -> flushing flows
+Port status s2 port 3: MODIFY, link UP -> flushing flows
+Port status s2 port 3: DELETE, link UP -> flushing flows
+Port status s2 port 4: MODIFY, link UP -> flushing flows
+Port status s2 port 4: DELETE, link UP -> flushing flows
+Port status s1 port 2: MODIFY, link UP -> flushing flows
+Port status s1 port 2: DELETE, link UP -> flushing flows
+Port status s2 port 5: MODIFY, link UP -> flushing flows
+Port status s2 port 5: DELETE, link UP -> flushing flows
+Port status s1 port 3: DELETE, link UP -> flushing flows
+Port status s2 port 1: DELETE, link UP -> flushing flows

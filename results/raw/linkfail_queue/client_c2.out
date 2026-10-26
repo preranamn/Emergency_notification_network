@@ -1,0 +1,7 @@
+[c2] Listening on port 5001. Logging to logs/client_c2.csv
+[c2] Registered with 10.0.0.1:5000
+[c2] ALERT 1: before failure (latency 0.38 ms)
+[c2] Registered with 10.0.0.1:5000
+[c2] Registered with 10.0.0.1:5000
+[c2] Registered with 10.0.0.1:5000
+[c2] ALERT 3: after recovery (latency 7.22 ms)

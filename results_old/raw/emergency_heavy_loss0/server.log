@@ -1,0 +1,86 @@
+Emergency server started! Listening on 0.0.0.0:5000
+> 
+Client registered: ('10.0.0.4', 5001) (total clients: 1)
+
+Client registered: ('10.0.0.3', 5001) (total clients: 2)
+
+Client registered: ('10.0.0.2', 5001) (total clients: 3)
+Alert 1: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 1 from c3
+
+ACK received for alert 1 from c1
+
+ACK received for alert 1 from c2
+Alert 1: all clients ACKed.
+> 
+Client registered: ('10.0.0.3', 5001) (total clients: 3)
+
+Client registered: ('10.0.0.4', 5001) (total clients: 3)
+
+Client registered: ('10.0.0.2', 5001) (total clients: 3)
+Alert 2: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 2 from c1
+
+ACK received for alert 2 from c3
+
+ACK received for alert 2 from c2
+Alert 2: all clients ACKed.
+> Alert 3: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 3 from c1
+
+ACK received for alert 3 from c3
+
+ACK received for alert 3 from c2
+Alert 3: all clients ACKed.
+> Alert 4: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 4 from c1
+
+ACK received for alert 4 from c3
+
+ACK received for alert 4 from c2
+Alert 4: all clients ACKed.
+> Alert 5: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 5 from c1
+
+ACK received for alert 5 from c3
+
+ACK received for alert 5 from c2
+Alert 5: all clients ACKed.
+> Alert 6: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 6 from c1
+
+ACK received for alert 6 from c3
+
+ACK received for alert 6 from c2
+Alert 6: all clients ACKed.
+> Alert 7: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 7 from c1
+
+ACK received for alert 7 from c3
+
+ACK received for alert 7 from c2
+Alert 7: all clients ACKed.
+> Alert 8: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 8 from c1
+
+ACK received for alert 8 from c3
+
+ACK received for alert 8 from c2
+Alert 8: all clients ACKed.
+> Alert 9: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 9 from c1
+
+ACK received for alert 9 from c3
+
+ACK received for alert 9 from c2
+Alert 9: all clients ACKed.
+> 

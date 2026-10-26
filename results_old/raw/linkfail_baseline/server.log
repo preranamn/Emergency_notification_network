@@ -1,0 +1,29 @@
+Emergency server started! Listening on 0.0.0.0:5000
+> 
+Client registered: ('10.0.0.3', 5001) (total clients: 1)
+
+Client registered: ('10.0.0.2', 5001) (total clients: 2)
+
+Client registered: ('10.0.0.4', 5001) (total clients: 3)
+Alert 1: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 1 from c2
+
+ACK received for alert 1 from c3
+
+ACK received for alert 1 from c1
+Alert 1: all clients ACKed.
+> Alert 2: attempt 1, sent to 3 waiting client(s).
+Alert 2: attempt 2, sent to 3 waiting client(s).
+Alert 2: attempt 3, sent to 3 waiting client(s).
+Alert 2: attempt 4, sent to 3 waiting client(s).
+Alert 2: delivery NOT confirmed for [('10.0.0.2', 5001), ('10.0.0.3', 5001), ('10.0.0.4', 5001)]
+> Alert 3: attempt 1, sent to 3 waiting client(s).
+
+ACK received for alert 3 from c3
+
+ACK received for alert 3 from c2
+
+ACK received for alert 3 from c1
+Alert 3: all clients ACKed.
+> 

@@ -1,0 +1,7 @@
+Link failure test (mode=baseline)
+deliveries per alert: {1: 3, 3: 3}
+controller flush events: 6
+[PASS] alert before failure delivered to all 3 clients
+[PASS] alert during failure not delivered
+[PASS] alert after recovery delivered to all 3 clients
+[PASS] controller flushed flows on port-status events
