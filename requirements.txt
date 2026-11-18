@@ -1,0 +1,10 @@
+# Backend & Web API (system Python 3.8+)
+Flask>=3.0.0
+requests>=2.31.0
+
+# SDN Controller (install in Python 3.8 virtualenv if system Python >= 3.12)
+# ryu==4.34
+# eventlet==0.30.2
+
+# System packages on Ubuntu/Linux (install via apt):
+# sudo apt install mininet openvswitch-switch iproute2 iperf
