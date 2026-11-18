@@ -1,0 +1,20 @@
+alert_id,timestamp_ms,category,priority,dscp,dscp_name,queue_id,message,congestion_active,congestion_rate_mbps,network_mode,intended_deliveries,udp_transmissions,packets_delivered,packets_acked,packets_lost,ack_failures,pdr_percent,plr_percent,avg_delivery_latency_ms,min_delivery_latency_ms,max_delivery_latency_ms,avg_rtt_ms,forwarding_path,link_hops,switch_hops
+ALT-204947-0001,1795015187767.359,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,LOOPBACK_TEST,3,3,3,3,0,0,100.0,0.0,0.26,0.15,0.448,1.328,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-204947-0002,1795015187818.362,FIRE,2,34,AF41,2,Fire detected in Coach A3. Immediate attention required.,False,0.0,LOOPBACK_TEST,3,3,3,3,0,0,100.0,0.0,0.661,0.273,1.221,1.19,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-204947-0003,1795015187869.48,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,False,0.0,LOOPBACK_TEST,3,3,3,3,0,0,100.0,0.0,0.208,0.155,0.289,0.859,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-204947-0004,1795015187920.42,MEDICAL,1,46,EF,1,Duplicate ACK verification test,False,0.0,LOOPBACK_TEST,3,3,3,3,0,0,100.0,0.0,0.23,0.17,0.303,1.092,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-204947-0005,1795015187971.919,FIRE,2,34,AF41,2,Controlled loss & ACK failure test,False,0.0,LOOPBACK_TEST,3,5,2,1,1,1,66.67,33.33,0.259,0.168,0.349,0.619,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205024-0001,1795015224626.894,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.282,2.197,2.403,2.975,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205027-0002,1795015227397.517,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.115,2.08,2.183,2.644,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205042-0003,1795015242320.413,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.268,2.242,2.319,2.669,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205130-0004,1795015290255.591,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,True,30.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,82.989,82.884,83.175,83.285,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205202-0005,1795015322250.627,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,True,30.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,90.745,90.562,90.942,91.07,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205425-0006,1795015465245.363,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.267,2.216,2.337,2.854,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205517-0001,1795015517579.248,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.307,2.277,2.367,2.859,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205532-0002,1795015532006.711,FIRE,2,34,AF41,2,Fire detected in Coach A3. Immediate attention required.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.689,2.523,2.918,3.091,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205541-0003,1795015541997.303,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.854,2.734,3.059,4.584,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205558-0004,1795015558947.099,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,True,29.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.286,2.214,2.391,2.823,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205608-0005,1795015568944.985,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,True,29.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.382,2.244,2.553,3.183,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-205616-0006,1795015576652.571,GENERAL,3,0,BE,3,General emergency announcement. Contact railway security.,True,29.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,99.31,98.865,99.945,100.156,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-213906-0001,1795018146584.309,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.349,2.271,2.453,3.042,H1 → S1 → S2 → H2/H3/H4,3,2
+ALT-213909-0002,1795018149369.584,MEDICAL,1,46,EF,1,Urgent medical assistance required in Coach B2.,False,0.0,MININET_SDN,3,3,3,3,0,0,100.0,0.0,2.107,2.07,2.138,2.677,H1 → S1 → S2 → H2/H3/H4,3,2

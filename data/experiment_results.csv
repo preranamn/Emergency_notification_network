@@ -1,0 +1,1 @@
+run_id,timestamp_ms,scenario,category,condition,congestion_rate_mbps,alerts_sent,intended_deliveries,packets_delivered,packets_lost,ack_failures,pdr_percent,plr_percent,avg_delivery_latency_ms,min_delivery_latency_ms,max_delivery_latency_ms,avg_rtt_ms,queue_tx_packets,queue_tx_bytes,network_mode

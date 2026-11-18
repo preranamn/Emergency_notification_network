@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDN Priority Emergency Notification Network — NOC</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- TOP NOC HEADER BAR -->
+  <header class="noc-header">
+    <div class="brand">
+      <div class="brand-dot" id="hdr-live-dot"></div>
+      <div>
+        <h1>SDN-BASED PRIORITY EMERGENCY NOTIFICATION NETWORK</h1>
+        <p class="subtitle">UDP Emergency Distribution &bull; OpenFlow 1.3 QoS Prioritization &bull; Live Performance Telemetry</p>
+      </div>
+    </div>
+
+    <div class="status-strip">
+      <div class="pill" id="pill-ryu"><span class="dot"></span>RYU SDN: <strong id="val-ryu">OFFLINE</strong></div>
+      <div class="pill" id="pill-net"><span class="dot"></span>NETWORK: <strong id="val-net">STOPPED</strong></div>
+      <div class="pill" id="pill-clients"><span class="dot"></span>CLIENTS: <strong id="val-clients">0/3</strong></div>
+      <div class="pill" id="pill-cong"><span class="dot"></span>CONGESTION: <strong id="val-cong">OFF</strong></div>
+    </div>
+  </header>
+
+  <main class="noc-main">
+    <!-- Toast / Status Banner -->
+    <div id="toast-banner" class="toast hidden"></div>
+
+    <!-- ================================================================ -->
+    <!-- TOP GRID: SECTION 1 & 3 (TOPOLOGY + PACKET JOURNEY) & SECTION 2  -->
+    <!-- ================================================================ -->
+    <section class="hero-grid">
+      <!-- SECTION 1 & SECTION 3: NETWORK TOPOLOGY & INTERACTIVE PACKET JOURNEY -->
+      <div class="panel topology-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="section-tag">SECTION 1 &amp; 3</span>
+            <h2>NETWORK TOPOLOGY &amp; LIVE PACKET JOURNEY</h2>
+          </div>
+          <div class="net-controls">
+            <button id="btn-start-mininet" class="btn btn-green" title="Start Mininet SDN topology with OVS QoS (requires sudo)">
+              &#9654; Activate Mininet
+            </button>
+            <button id="btn-start-loopback" class="btn btn-ghost" title="Start local UDP loopback test mode (no sudo required)">
+              Loopback Test Mode
+            </button>
+            <button id="btn-stop-mininet" class="btn btn-danger" disabled>
+              &#9632; Stop Network
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Packet Journey HUD -->
+        <div class="journey-hud" id="journey-hud">
+          <div class="hud-item"><span class="hud-lbl">STATUS</span><span class="hud-val" id="hud-status">IDLE — READY TO TRANSMIT</span></div>
+          <div class="hud-item"><span class="hud-lbl">ALERT ID</span><span class="hud-val mono" id="hud-alert-id">N/A</span></div>
+          <div class="hud-item"><span class="hud-lbl">ROUTE</span><span class="hud-val mono" id="hud-route">H1 &rarr; S1 &rarr; S2 &rarr; H2/H3/H4</span></div>
+          <div class="hud-item"><span class="hud-lbl">CLASS / PRIO</span><span class="hud-val" id="hud-cat">N/A</span></div>
+          <div class="hud-item"><span class="hud-lbl">ANIMATION BASIS</span><span class="hud-val hud-note" id="hud-basis">Topology-Based Illustration (Backend Event Driven)</span></div>
+        </div>
+
+        <!-- PURE BLACK SVG NETWORK CANVAS -->
+        <div class="canvas-wrap">
+          <svg id="topology-svg" viewBox="0 0 920 440" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <!-- Subtle NOC grid -->
+              <pattern id="noc-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#13171d" stroke-width="1" />
+              </pattern>
+              <!-- Glow filter for packets -->
+              <filter id="pkt-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <rect width="920" height="440" fill="#06080a" />
+            <rect width="920" height="440" fill="url(#noc-grid)" />
+
+            <!-- Control Plane Dashed Links (Ryu -> S1, S2) -->
+            <g class="control-links">
+              <line id="link-ryu-s1" class="ctrl-link" x1="460" y1="78" x2="315" y2="215" />
+              <line id="link-ryu-s2" class="ctrl-link" x1="460" y1="78" x2="605" y2="215" />
+              <text x="355" y="135" class="link-caption ctrl-caption">OF 1.3</text>
+              <text x="530" y="135" class="link-caption ctrl-caption">OF 1.3</text>
+            </g>
+
+            <!-- Data Plane Links -->
+            <g class="data-links">
+              <line id="link-h1-s1" class="net-link" x1="120" y1="150" x2="315" y2="225" />
+              <line id="link-h5-s1" class="net-link bg-link" x1="120" y1="335" x2="315" y2="245" />
+              <line id="link-s1-s2" class="net-link trunk-link" x1="315" y1="235" x2="605" y2="235" />
+              <line id="link-s2-h2" class="net-link" x1="605" y1="220" x2="800" y2="95" />
+              <line id="link-s2-h3" class="net-link" x1="605" y1="232" x2="800" y2="195" />
+              <line id="link-s2-h4" class="net-link" x1="605" y1="244" x2="800" y2="295" />
+              <line id="link-s2-h6" class="net-link bg-link" x1="605" y1="255" x2="800" y2="385" />
+            </g>
+
+            <!-- Bottleneck Trunk Label -->
+            <g id="trunk-badge" transform="translate(460, 212)">
+              <rect x="-112" y="-14" width="224" height="22" rx="4" fill="#111418" stroke="#2c333c" />
+              <text x="0" y="1" text-anchor="middle" class="trunk-text" id="trunk-label">S1 ↔ S2 TRUNK • OVS HTB QoS (10 Mbps)</text>
+            </g>
+            <!-- Queue indicators under trunk -->
+            <g transform="translate(460, 260)">
+              <rect x="-126" y="-10" width="80" height="20" rx="3" fill="#1b140d" stroke="#f97316" stroke-width="1" />
+              <text x="-86" y="4" text-anchor="middle" class="q-badge-text q-med" id="svg-q1">Q1 EF: 0</text>
+              <rect x="-40" y="-10" width="80" height="20" rx="3" fill="#1c0e0e" stroke="#ef4444" stroke-width="1" />
+              <text x="0" y="4" text-anchor="middle" class="q-badge-text q-fire" id="svg-q2">Q2 AF41: 0</text>
+              <rect x="46" y="-10" width="80" height="20" rx="3" fill="#1a180b" stroke="#eab308" stroke-width="1" />
+              <text x="86" y="4" text-anchor="middle" class="q-badge-text q-gen" id="svg-q3">Q3 BE: 0</text>
+            </g>
+
+            <!-- Dynamic Packet Animation Layer -->
+            <g id="congestion-layer"></g>
+            <g id="packet-layer"></g>
+
+            <!-- NODES -->
+            <!-- Ryu Controller -->
+            <g class="topo-node" id="node-RYU" transform="translate(460, 52)">
+              <rect x="-95" y="-26" width="190" height="52" rx="8" class="node-box ctrl-box" />
+              <circle cx="-76" cy="-8" r="5" class="status-led" id="led-RYU" />
+              <text x="6" y="-4" text-anchor="middle" class="node-title">RYU SDN CONTROLLER</text>
+              <text x="6" y="14" text-anchor="middle" class="node-sub">OpenFlow 1.3 • :6653 / :8088</text>
+            </g>
+
+            <!-- H1 Server -->
+            <g class="topo-node" id="node-H1" transform="translate(105, 150)">
+              <rect x="-78" y="-32" width="156" height="64" rx="8" class="node-box" />
+              <circle cx="-60" cy="-14" r="5" class="status-led" id="led-H1" />
+              <text x="6" y="-10" text-anchor="middle" class="node-title">H1 SERVER</text>
+              <text x="6" y="6" text-anchor="middle" class="node-sub">10.0.0.1 :9000</text>
+              <text x="6" y="21" text-anchor="middle" class="node-role">Emergency UDP Server</text>
+            </g>
+
+            <!-- H5 Traffic Generator -->
+            <g class="topo-node" id="node-H5" transform="translate(105, 335)">
+              <rect x="-78" y="-32" width="156" height="64" rx="8" class="node-box bg-box" />
+              <circle cx="-60" cy="-14" r="5" class="status-led" id="led-H5" />
+              <text x="6" y="-10" text-anchor="middle" class="node-title">H5 BG GEN</text>
+              <text x="6" y="6" text-anchor="middle" class="node-sub">10.0.0.5 (DSCP 0)</text>
+              <text x="6" y="21" text-anchor="middle" class="node-role" id="h5-state-txt">Congestion Source</text>
+            </g>
+
+            <!-- S1 Ingress Switch -->
+            <g class="topo-node" id="node-S1" transform="translate(315, 235)">
+              <rect x="-56" y="-34" width="112" height="68" rx="8" class="node-box switch-box" />
+              <circle cx="-40" cy="-16" r="5" class="status-led" id="led-S1" />
+              <text x="5" y="-11" text-anchor="middle" class="node-title">S1 INGRESS</text>
+              <text x="5" y="5" text-anchor="middle" class="node-sub">OVS dpid:1</text>
+              <text x="5" y="20" text-anchor="middle" class="node-role">QoS Classifier</text>
+            </g>
+
+            <!-- S2 Egress Switch -->
+            <g class="topo-node" id="node-S2" transform="translate(605, 235)">
+              <rect x="-56" y="-34" width="112" height="68" rx="8" class="node-box switch-box" />
+              <circle cx="-40" cy="-16" r="5" class="status-led" id="led-S2" />
+              <text x="5" y="-11" text-anchor="middle" class="node-title">S2 EGRESS</text>
+              <text x="5" y="5" text-anchor="middle" class="node-sub">OVS dpid:2</text>
+              <text x="5" y="20" text-anchor="middle" class="node-role">Client Fanout</text>
+            </g>
+
+            <!-- H2 Client 1 -->
+            <g class="topo-node" id="node-H2" transform="translate(815, 95)">
+              <rect x="-78" y="-30" width="156" height="60" rx="8" class="node-box client-box" />
+              <circle cx="-60" cy="-13" r="5" class="status-led" id="led-H2" />
+              <text x="6" y="-9" text-anchor="middle" class="node-title">H2 CLIENT 1</text>
+              <text x="6" y="6" text-anchor="middle" class="node-sub">10.0.0.2 :9102</text>
+              <text x="6" y="21" text-anchor="middle" class="node-status-badge" id="svg-status-H2">WAITING</text>
+            </g>
+
+            <!-- H3 Client 2 -->
+            <g class="topo-node" id="node-H3" transform="translate(815, 195)">
+              <rect x="-78" y="-30" width="156" height="60" rx="8" class="node-box client-box" />
+              <circle cx="-60" cy="-13" r="5" class="status-led" id="led-H3" />
+              <text x="6" y="-9" text-anchor="middle" class="node-title">H3 CLIENT 2</text>
+              <text x="6" y="6" text-anchor="middle" class="node-sub">10.0.0.3 :9103</text>
+              <text x="6" y="21" text-anchor="middle" class="node-status-badge" id="svg-status-H3">WAITING</text>
+            </g>
+
+            <!-- H4 Client 3 -->
+            <g class="topo-node" id="node-H4" transform="translate(815, 295)">
+              <rect x="-78" y="-30" width="156" height="60" rx="8" class="node-box client-box" />
+              <circle cx="-60" cy="-13" r="5" class="status-led" id="led-H4" />
+              <text x="6" y="-9" text-anchor="middle" class="node-title">H4 CLIENT 3</text>
+              <text x="6" y="6" text-anchor="middle" class="node-sub">10.0.0.4 :9104</text>
+              <text x="6" y="21" text-anchor="middle" class="node-status-badge" id="svg-status-H4">WAITING</text>
+            </g>
+
+            <!-- H6 Traffic Sink -->
+            <g class="topo-node" id="node-H6" transform="translate(815, 388)">
+              <rect x="-78" y="-26" width="156" height="52" rx="8" class="node-box bg-box" />
+              <circle cx="-60" cy="-10" r="5" class="status-led" id="led-H6" />
+              <text x="6" y="-6" text-anchor="middle" class="node-title">H6 BG SINK</text>
+              <text x="6" y="10" text-anchor="middle" class="node-sub">10.0.0.6 :5001</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Topology Legend + Congestion & Packet Loss Bar -->
+        <div class="topo-footer">
+          <div class="legend">
+            <span><i class="swatch sw-green"></i>Active Link / ACK</span>
+            <span><i class="swatch sw-med"></i>Medical (EF 46)</span>
+            <span><i class="swatch sw-fire"></i>Fire (AF41 34)</span>
+            <span><i class="swatch sw-gen"></i>General (BE 0)</span>
+            <span><i class="swatch sw-bg"></i>H5→H6 Background</span>
+          </div>
+
+          <div class="congestion-bar">
+            <div class="ctrl-group">
+              <label for="cong-rate">H5→H6 Traffic:</label>
+              <input type="range" id="cong-rate" min="5" max="30" step="1" value="18" />
+              <span class="mono" id="cong-rate-val">18 Mbps</span>
+              <button id="btn-cong-start" class="btn btn-amber btn-sm">Start Congestion</button>
+              <button id="btn-cong-stop" class="btn btn-ghost btn-sm" disabled>Stop</button>
+            </div>
+            <div class="ctrl-group fault-group">
+              <label for="fault-client">Loss Test:</label>
+              <select id="fault-client">
+                <option value="H2">H2</option>
+                <option value="H3">H3</option>
+                <option value="H4">H4</option>
+              </select>
+              <input type="number" id="fault-fwd" min="0" max="100" value="0" title="Forward packet loss %" />
+              <span class="mini-lbl">% Fwd</span>
+              <input type="number" id="fault-ack" min="0" max="100" value="0" title="Return ACK loss %" />
+              <span class="mini-lbl">% ACK</span>
+              <button id="btn-apply-loss" class="btn btn-ghost btn-sm">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: EMERGENCY ALERT CONSOLE -->
+      <div class="panel console-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="section-tag">SECTION 2</span>
+            <h2>EMERGENCY ALERT CONSOLE</h2>
+          </div>
+        </div>
+
+        <div class="cat-buttons">
+          <button class="cat-btn cat-med active" data-cat="MEDICAL">
+            <span class="cat-name">MEDICAL ALERT</span>
+            <span class="cat-meta">PRIO 1 &bull; DSCP EF (46) &bull; Q1</span>
+          </button>
+          <button class="cat-btn cat-fire" data-cat="FIRE">
+            <span class="cat-name">FIRE ALERT</span>
+            <span class="cat-meta">PRIO 2 &bull; DSCP AF41 (34) &bull; Q2</span>
+          </button>
+          <button class="cat-btn cat-gen" data-cat="GENERAL">
+            <span class="cat-name">GENERAL ALERT</span>
+            <span class="cat-meta">PRIO 3 &bull; DSCP BE (0) &bull; Q3</span>
+          </button>
+        </div>
+
+        <!-- Selected QoS Profile Inspector -->
+        <div class="qos-inspector" id="qos-inspector">
+          <div class="qi-cell"><span>Category</span><strong id="qi-category" class="txt-med">MEDICAL</strong></div>
+          <div class="qi-cell"><span>Priority</span><strong id="qi-priority">1 — HIGHEST</strong></div>
+          <div class="qi-cell"><span>DSCP</span><strong id="qi-dscp" class="mono">EF (46)</strong></div>
+          <div class="qi-cell"><span>OVS Queue</span><strong id="qi-queue">Queue 1 (Highest)</strong></div>
+        </div>
+
+        <!-- Custom Message Input -->
+        <div class="form-field">
+          <label for="alert-message">Emergency Notification Message</label>
+          <textarea id="alert-message" rows="2">Urgent medical assistance required in Coach B2.</textarea>
+        </div>
+
+        <!-- ACK Policy Config -->
+        <div class="policy-row">
+          <div class="mini-field">
+            <label for="ack-timeout">ACK Timeout (s)</label>
+            <input type="number" id="ack-timeout" min="0.3" max="15" step="0.1" value="2.0" />
+          </div>
+          <div class="mini-field">
+            <label for="max-retries">Max Retries</label>
+            <input type="number" id="max-retries" min="0" max="5" step="1" value="2" />
+          </div>
+          <div class="mini-field">
+            <label for="retry-interval">Retry Int. (s)</label>
+            <input type="number" id="retry-interval" min="0.2" max="5" step="0.1" value="0.7" />
+          </div>
+        </div>
+
+        <!-- Send & Experiment Buttons -->
+        <div class="action-stack">
+          <button id="btn-send-alert" class="btn btn-send btn-send-med">
+            SEND MEDICAL ALERT TO ALL CLIENTS
+          </button>
+          <div class="sub-actions">
+            <button id="btn-run-exp" class="btn btn-ghost btn-sm" title="Run Medical/Fire/General under Normal & Congestion conditions">
+              &#9881; Run 6-Scenario QoS Experiment
+            </button>
+            <button id="btn-reset-metrics" class="btn btn-ghost btn-sm">
+              &#8634; Reset Session Metrics
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Registered Clients Reception Panel -->
+        <div class="client-inbox-section">
+          <h3>REGISTERED CLIENTS &amp; LIVE ACK STATUS</h3>
+          <div class="client-cards">
+            <div class="client-card" id="card-H2">
+              <div class="cc-top">
+                <strong>H2 &bull; Client 1</strong>
+                <span class="cc-badge badge-idle" id="badge-H2">OFFLINE</span>
+              </div>
+              <div class="cc-msg" id="msg-H2">Awaiting emergency notification...</div>
+              <div class="cc-metrics mono">
+                <span>Lat: <b id="cc-lat-H2">N/A</b></span>
+                <span>RTT: <b id="cc-rtt-H2">N/A</b></span>
+              </div>
+            </div>
+
+            <div class="client-card" id="card-H3">
+              <div class="cc-top">
+                <strong>H3 &bull; Client 2</strong>
+                <span class="cc-badge badge-idle" id="badge-H3">OFFLINE</span>
+              </div>
+              <div class="cc-msg" id="msg-H3">Awaiting emergency notification...</div>
+              <div class="cc-metrics mono">
+                <span>Lat: <b id="cc-lat-H3">N/A</b></span>
+                <span>RTT: <b id="cc-rtt-H3">N/A</b></span>
+              </div>
+            </div>
+
+            <div class="client-card" id="card-H4">
+              <div class="cc-top">
+                <strong>H4 &bull; Client 3</strong>
+                <span class="cc-badge badge-idle" id="badge-H4">OFFLINE</span>
+              </div>
+              <div class="cc-msg" id="msg-H4">Awaiting emergency notification...</div>
+              <div class="cc-metrics mono">
+                <span>Lat: <b id="cc-lat-H4">N/A</b></span>
+                <span>RTT: <b id="cc-rtt-H4">N/A</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- SECTION 4: PERFORMANCE DASHBOARD + LIVE TRANSMISSION TIMELINE    -->
+    <!-- ================================================================ -->
+    <section class="lower-grid">
+      <!-- SECTION 4: PERFORMANCE DASHBOARD -->
+      <div class="panel dashboard-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="section-tag">SECTION 4</span>
+            <h2>PERFORMANCE DASHBOARD <span class="inspect-tag mono" id="inspecting-label">(LATEST ALERT)</span></h2>
+          </div>
+          <div class="dash-tabs">
+            <button class="tab-btn active" data-scope="latest">Selected Alert</button>
+            <button class="tab-btn" data-scope="aggregate">Session Aggregate</button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-lbl">Packets Sent</span>
+            <strong class="kpi-val mono" id="kpi-sent">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-sent-sub">UDP Tx: N/A</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-lbl">Packets Delivered</span>
+            <strong class="kpi-val mono txt-green" id="kpi-delivered">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-acked-sub">ACKs: N/A</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-lbl">Packets Lost</span>
+            <strong class="kpi-val mono txt-fire" id="kpi-lost">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-ackloss-sub">ACK Lost: N/A</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-lbl">Delivery Ratio (PDR)</span>
+            <strong class="kpi-val mono txt-green" id="kpi-pdr">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-plr">PLR: N/A</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-lbl">Avg Delivery Latency</span>
+            <strong class="kpi-val mono" id="kpi-avg-lat">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-minmax-lat">Min/Max: N/A</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-lbl">Average RTT</span>
+            <strong class="kpi-val mono" id="kpi-avg-rtt">N/A</strong>
+            <span class="kpi-sub mono" id="kpi-hops">Hops: 3 links (2 switches)</span>
+          </div>
+        </div>
+
+        <!-- Per-Client Individual Latency, RTT, and Forwarding Path -->
+        <div class="per-client-table-wrap">
+          <table class="noc-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Delivery Latency</th>
+                <th>Round-Trip Time (RTT)</th>
+                <th>Forwarding Path</th>
+                <th>Hops</th>
+              </tr>
+            </thead>
+            <tbody id="per-client-tbody">
+              <tr><td colspan="6" class="empty-cell">Send an emergency notification to measure H2, H3, and H4 performance.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Chart.js Visualizations -->
+        <div class="charts-grid">
+          <div class="chart-box">
+            <h4>CATEGORY PRIORITY COMPARISON — AVG LATENCY &amp; RTT (ms)</h4>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-category"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h4>PER-CLIENT LATENCY &amp; RTT (H2 vs H3 vs H4)</h4>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-clients"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category-Wise Comparison Table (Normal vs Congestion) -->
+        <div class="sub-panel">
+          <h4>CATEGORY-WISE PRIORITY PERFORMANCE (MEDICAL vs FIRE vs GENERAL)</h4>
+          <table class="noc-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Condition</th>
+                <th>Alerts</th>
+                <th>PDR %</th>
+                <th>PLR %</th>
+                <th>Avg Latency</th>
+                <th>Min / Max Lat</th>
+                <th>Avg RTT</th>
+              </tr>
+            </thead>
+            <tbody id="category-compare-tbody">
+              <tr><td colspan="8" class="empty-cell">No category comparison measurements recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent Alerts History + Live OVS Queue Stats -->
+        <div class="split-tables">
+          <div class="sub-panel">
+            <h4>RECENT ALERTS (CLICK ROW TO INSPECT)</h4>
+            <div class="scroll-table">
+              <table class="noc-table">
+                <thead>
+                  <tr>
+                    <th>Alert ID</th>
+                    <th>Category</th>
+                    <th>Cond.</th>
+                    <th>Delivered</th>
+                    <th>PDR</th>
+                    <th>Avg Lat</th>
+                    <th>Avg RTT</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-alerts-tbody">
+                  <tr><td colspan="7" class="empty-cell">No alerts transmitted yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel">
+            <h4>LIVE OPENFLOW 1.3 / OVS QUEUE STATISTICS</h4>
+            <div class="scroll-table">
+              <table class="noc-table">
+                <thead>
+                  <tr>
+                    <th>Switch</th>
+                    <th>Port</th>
+                    <th>Queue</th>
+                    <th>Category</th>
+                    <th>TX Pkts</th>
+                    <th>TX Bytes</th>
+                    <th>Errors</th>
+                  </tr>
+                </thead>
+                <tbody id="ovs-queues-tbody">
+                  <tr><td colspan="7" class="empty-cell">Connect Ryu + Mininet to view live OVS queue counters.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE TRANSMISSION TIMELINE -->
+      <div class="panel timeline-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="section-tag">LIVE EVENT STREAM</span>
+            <h2>TRANSMISSION TIMELINE</h2>
+          </div>
+          <span class="sse-badge" id="sse-badge">SSE: CONNECTING</span>
+        </div>
+
+        <div class="timeline-list" id="timeline-list">
+          <div class="timeline-empty">
+            Activate the network and send an emergency notification to observe real-time packet generation, classification, QoS forwarding, delivery, and ACK timestamps.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
